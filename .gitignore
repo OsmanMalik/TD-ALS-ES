@@ -1,0 +1,15 @@
+# Extensions
+*.mat
+*.pdf
+*.fig
+*.asv
+*.mexw64
+*.txt
+*.jpg
+
+# Folders
+old
+.idea
+
+# Files
+make_distribution_plots.m
