@@ -148,6 +148,16 @@ if nargout > 1 && tol > 0 && (strcmp(conv_crit, 'relative error') || strcmp(conv
     conv_vec = zeros(1, maxiters);
 end
 
+% Precompute vectors with order in which to multiply cores.
+% For some reason, reinitializing the vector below ends up taking some
+% non-negligible amount of time if it's done inside the main loop below, so
+% predefining them here instead to avoid that.
+idx_order = cell(N,1);
+for n = 1:N
+    idx_order{n} = [n+1:N 1:n-1];
+end
+
+
 %% Main loop
 % Iterate until convergence, for a maximum of maxiters iterations
 
@@ -171,7 +181,7 @@ for it = 1:maxiters
         rescaling = ones(J2, 1) ./ (sqrt_p * sqrt(J2));
         
         % Construct sketched design matrix
-        idx = [n+1:N 1:n-1]; % Order in which to multiply cores
+        idx = idx_order{n}; % Order in which to multiply cores
         G_sketch = permute(core_samples{idx(1)}, [1 3 2]);
         for m = 2:N-1
             permuted_core = permute(core_samples{idx(m)}, [1 3 2]);

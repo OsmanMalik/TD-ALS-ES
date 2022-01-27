@@ -71,11 +71,29 @@ for it = 1:maxiters
                 SA = SA .* A{j}(unq_samples(:, j), :);
             end
         end
-        
+
+
         % Construct sketched right hand side
+        % Note: Out of 2 options below, second option is MUCH faster (about
+        % 30-40x in one test).
+
+        % Option 1: Unfold matrix, compute columns to sample, then
+        % transpose
+        %{
         lin_samples = to_linear_idx_CP(unq_samples, n, sz);
         Xn = classical_mode_unfolding(X, n);
         SXnT = Xn(:, lin_samples).';
+        %}
+
+        % Option 2: Compute linear indices, sample directly from tensor,
+        % then reshape to sketched matrix
+        szp = cumprod([1 sz(1:end-1)]);
+        samples_temp = unq_samples - 1; samples_temp(:,n) = 0;
+        llin = 1+samples_temp*szp';
+        llin = repelem(llin, sz(n), 1) + repmat((0:sz(n)-1)'*szp(n), size(unq_samples,1), 1);
+        SXnT = X(llin);
+        SXnT = reshape(SXnT, sz(n), size(unq_samples,1))';
+
         SXnT = SXnT .* rescale;
         
         % Solve sketched LS problem and update nth factor matrix
