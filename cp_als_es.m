@@ -26,6 +26,13 @@ parse(params, varargin{:});
 maxiters = params.Results.maxiters;
 permute_for_speed = params.Results.permute_for_speed;
 
+if isscalar(J1)
+    J1 = repmat(J1, N, 1);
+end
+if isscalar(J2)
+    J2 = repmat(J2, N, 1);
+end
+
 % Permute modes of X for increased speed
 if permute_for_speed
     sz = size(X);
@@ -34,6 +41,8 @@ if permute_for_speed
     perm_vec = mod((max_idx : max_idx+N-1) - 1, N) + 1;
     inv_perm_vec(perm_vec) = 1:N;
     X = permute(X, perm_vec);
+    J1 = J1(perm_vec);
+    J2 = J2(perm_vec);
 end
 
 sz = size(X);
@@ -42,7 +51,7 @@ N = length(sz);
 % Initialize factor matrices
 A = cell(1,N);
 for j = 2:N
-    A{j} = randn(sz(j), R);
+    A{j} = rand(sz(j), R);
 end
 
 % Main loop
@@ -52,8 +61,8 @@ for it = 1:maxiters
     for n = 1:N
         
         % Draw samples
-        PsiA = recursive_sketch_CP(A, n, J1);
-        [samples, sqrt_p] = draw_samples_CP(A, PsiA, n, J2);
+        PsiA = recursive_sketch_CP(A, n, J1(n));
+        [samples, sqrt_p] = draw_samples_CP(A, PsiA, n, J2(n));
         
         % Merge identical samples and count occurences
         [occurs, ~] = groupcounts(samples);
@@ -62,7 +71,7 @@ for it = 1:maxiters
         unq_samples = [unq_samples(:, 1:n-1) nan(J2_unq,1) unq_samples(:, n:N-1)];
         
         % Compute rescaling factors
-        rescale = sqrt(occurs./J2) ./ sqrt_p(unq_idx);
+        rescale = sqrt(occurs./J2(n)) ./ sqrt_p(unq_idx);
         
         % Construct sketched design matrix
         SA = repmat(rescale, 1, R);

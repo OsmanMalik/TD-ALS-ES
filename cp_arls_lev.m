@@ -26,10 +26,14 @@ maxiters = params.Results.maxiters;
 sz = size(X);
 N = length(sz);
 
+if isscalar(J)
+    J = repmat(J, N, 1);
+end
+
 % Initialize factor matrices
 A = cell(1,N);
 for j = 2:N
-    A{j} = randn(sz(j), R);
+    A{j} = rand(sz(j), R);
 end
 
 % Initialize sampling probability
@@ -46,10 +50,10 @@ for it = 1:maxiters
     for n = 1:N
         
         % Draw samples
-        samples = nan(J, N);
+        samples = nan(J(n), N);
         for j = 1:N
             if j ~= n
-                samples(:, j) = randsample(sz(j), J, true, sampling_probs{j});
+                samples(:, j) = randsample(sz(j), J(n), true, sampling_probs{j});
             end
         end
 
@@ -62,7 +66,7 @@ for it = 1:maxiters
         end
         
         % Compute rescaling factors
-        rescale = sqrt(occurs./J);
+        rescale = sqrt(occurs./J(n));
         for j = 1:N
             if j ~= n
                 rescale = rescale ./ sqrt(sampling_probs{j}(unq_samples(:,j)));
