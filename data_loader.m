@@ -47,7 +47,12 @@ switch data
         X = permute(X, [1 6 2 7 3 8 4 9 5 10 11 12]);
         X = reshape(X, [4 4 4 4 4 3 7200]);
         varargout{1} = class_array;
-        
+
+    case 'coil-100'
+        path = 'E:/data_sets/images/coil-100/coil_100.mat';
+        load(path, 'img_array', 'class_array');
+        X = img_array;
+        varargout{1} = class_array;
 end
 
 end

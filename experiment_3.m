@@ -7,9 +7,9 @@
 %repo which is available at: https://github.com/OsmanMalik/tr-als-sampled
 
 vec = @(x) x(:);
-[X, class_array] = data_loader('coil-downsampled');
+[X, class_array] = data_loader('coil-100');
 
-method = "tr_als_es";
+method = "tr_als";
 
 sz = size(X);
 ranks = [5,5,5,5];
@@ -22,6 +22,38 @@ switch method
         CPD = cp_als(tensor(X), CP_rank, 'tol', tol, 'maxiters', maxiters);
         factor_mats = CPD.U;
         lambda = CPD.lambda;
+    case "cp_als_basic"
+        factor_mats = cp_als_basic(X, CP_rank, 'maxiters', maxiters);
+        lambda = ones(CP_rank,1);
+    case "cpd_als" % Tensorlab
+        options.Algorithm = @cpd_als;
+        options.MaxIter = maxiters;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
+    case "cpd_minf" % Tensorlab
+        options.Algorithm = @cpd_minf;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
+    case "cpd_nls" % Tensorlab
+        options.Algorithm = @cpd_nls;
+        options.MaxIter = maxiters;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
+    case "cpd3_sd" % Tensorlab -- only 3-way tensors
+        options.Algorithm = @cpd3_sd;
+        options.MaxIter = maxiters;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
+    case "cpd3_sgsd" % Tensorlab -- only 3-way tensors
+        options.Algorithm = @cpd3_sgsd;
+        options.MaxIter = maxiters;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
+    case "cpd_rbs" % Tensorlab
+        options.Algorithm = @cpd_rbs;
+        options.MaxIter = maxiters;
+        factor_mats = cpd(X, CP_rank, options);
+        lambda = ones(CP_rank,1);
     case "cp_arls_lev"
         J = 1000;
         factor_mats = cp_arls_lev(X, CP_rank, J, 'maxiters', maxiters);
@@ -62,6 +94,7 @@ else % CP method
     feat_mat = factor_mats{end};
     Y = double(tensor(ktensor(lambda, factor_mats)));    
 end
+
 Mdl = fitcknn(feat_mat, class_array, 'numneighbors', 1);
 cvmodel = crossval(Mdl);
 loss = kfoldLoss(cvmodel, 'lossfun', 'classiferror');
@@ -69,4 +102,6 @@ accuracy = 1 - loss;
 fprintf('Accuracy is %.4f\n', accuracy);
 fprintf('Error is %.4f\n', norm(vec(X - Y))/norm(vec(Y)))
 fprintf('Decomposition time was %.4f\n', exp3_toc);
+%{
 %save("experiment_3_" + method + "_results.mat", 'accuracy', 'exp3_toc');
+%}
