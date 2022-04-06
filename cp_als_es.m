@@ -26,6 +26,8 @@ parse(params, varargin{:});
 maxiters = params.Results.maxiters;
 permute_for_speed = params.Results.permute_for_speed;
 
+N = ndims(X);
+
 if isscalar(J1)
     J1 = repmat(J1, N, 1);
 end
@@ -36,7 +38,6 @@ end
 % Permute modes of X for increased speed
 if permute_for_speed
     sz = size(X);
-    N = length(sz);
     [~, max_idx] = max(sz);
     perm_vec = mod((max_idx : max_idx+N-1) - 1, N) + 1;
     inv_perm_vec(perm_vec) = 1:N;
@@ -46,7 +47,6 @@ if permute_for_speed
 end
 
 sz = size(X);
-N = length(sz);
 
 % Initialize factor matrices
 A = cell(1,N);
