@@ -69,7 +69,18 @@ for m = 1:q
             for rj_2 = 1:Rj_2
                 for rj = 1:Rj
                     M1 = squeeze(Y_old{2*j-1}(:, :, rj))';
-                    M2 = squeeze(Y_old{2*j}(rj_2, :, :));
+                    temp_array = Y_old{2*j}(rj_2, :, :);
+                    if ismatrix(temp_array) && size(temp_array,1) == 1
+                        % Having to treat this case separately due to the
+                        % inconsistent behavior of Matlab's squeeze
+                        % function. When the input to squeeze is a matrix
+                        % or vector, squeeze doesn't do anything, even if
+                        % there are singleton modes. This is an issue here
+                        % when the input is of size 1 by n with n > 1.
+                        M2 = temp_array.';
+                    else
+                        M2 = squeeze(Y_old{2*j}(rj_2, :, :));
+                    end
                     M_out = sum(TensorSketch({M1, M2}, J, 'h', h, 's', s), 2); % Sum over "rj_1 = 1:Rj_1"
                     Y{j}(rj_2, :, rj) = M_out;
                 end

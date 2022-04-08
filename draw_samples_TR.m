@@ -86,14 +86,14 @@ for samp = 1:J2
             if idx(1) >= m || idx(1) == n
                 M = C2{idx(1)};
             else
-                sz = size(C1{idx(1)});
+                sz = size(C1{idx(1)}, 1:3);
                 M = reshape(C1{idx(1)}(:, samples(samp,idx(1)), :), sz(1), sz(3));
             end
             for j = 2:length(idx)
                 if idx(j) >= m || idx(j) == n
                     M = M * C2{idx(j)};
                 else
-                    sz = size(C1{idx(j)});
+                    sz = size(C1{idx(j)}, 1:3);
                     M = M * reshape(C1{idx(j)}(:, samples(samp,idx(j)), :), sz(1), sz(3));
                 end
             end
