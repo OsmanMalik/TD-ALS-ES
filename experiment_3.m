@@ -14,6 +14,7 @@ no_trials = 5;
 ACC = zeros(no_trials, 1);
 ER = zeros(no_trials, 1);
 TIME = zeros(no_trials, 1);
+alpha = 1e-2; % Regularizer coefficient, if regularization needed.
 
 sz = size(X);
 ranks = [5,5,5,5];
@@ -75,7 +76,7 @@ for tr = 1:no_trials
             cores = rtr_als(X, ranks, K, 'tol', tol, 'conv_crit', 'relative error', 'maxiters', maxiters, 'verbose', true);
         case "tr_als_sampled"
             J = 1000;
-            cores = tr_als_sampled(X, ranks, J*ones(size(sz)), 'tol', tol, 'conv_crit', 'relative error', 'maxiters', maxiters, 'resample', true, 'verbose', true);
+            cores = tr_als_sampled(X, ranks, J*ones(size(sz)), 'tol', tol, 'conv_crit', 'relative error', 'maxiters', maxiters, 'resample', true, 'verbose', true, 'alpha', alpha);
         case "tr_svd"
             cores = TRdecomp_ranks(X, ranks);
         case "tr_svd_rand"
@@ -84,7 +85,7 @@ for tr = 1:no_trials
         case "tr_als_es"
             J1 = 10000;
             J2 = 1000;
-            cores = tr_als_es(X, ranks, J1, J2*ones(size(sz)), 'tol', tol, 'permute_for_speed', true, 'conv_crit', 'relative error', 'maxiters', maxiters, 'verbose', true);
+            cores = tr_als_es(X, ranks, J1, J2*ones(size(sz)), 'tol', tol, 'permute_for_speed', true, 'conv_crit', 'relative error', 'maxiters', maxiters, 'verbose', true, 'alpha', alpha);
         otherwise
             error('Invalid method.')
     end
