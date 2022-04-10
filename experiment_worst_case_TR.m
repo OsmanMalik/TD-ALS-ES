@@ -54,10 +54,37 @@ fprintf('Core tensor initialization:\n')
 fprintf('\tTime: %.4f\n\n', toc_init)
 
 
+%% Test of TR-ALS-ES
+
+% Sketch sizes
+J1 = 10000; % 10000
+J2 = 1000; %100
+
+% Run decomposition
+my_tic = tic;
+cores = tr_als_es(X, TR_rank, J1, J2*ones(1,N), ...
+    'maxiters', maxiters, ...
+    'tol', 0, ...
+    'verbose', true, ...
+    'init', cores_init);
+toc_tr_als_es = toc(my_tic);
+
+% Compute error
+Y = cores_2_tensor(cores);
+er_tr_als_es = norm(vec(X-Y))/normX;
+
+% Print results
+fprintf('TR-ALS-ES\n')
+fprintf('\tTime: %.4f s\n', toc_tr_als_es)
+fprintf('\tError: %.4e\n\n', er_tr_als_es)
+
+
 %% Test of TR-ALS-Sampled
 
 % Sketch size
-J = I^(N-3); % 2*I^(N-1) doesn't work; will need to make larger...
+J = I^(N-1)/2; % 2*I^(N-1) doesn't work; will need to make larger...
+             % Note though that I^(N-1) is the number of rows in the full
+             % LS problem.
 
 % Run decomposition
 my_tic = tic;
@@ -78,30 +105,6 @@ fprintf('TR-ALS-Sampled\n')
 fprintf('\tTime: %.4f s\n', toc_tr_als_samp)
 fprintf('\tError: %.4e\n\n', er_tr_als_samp)
 
-
-%% Test of TR-ALS-ES
-
-% Sketch sizes
-J1 = 1000; % 10000
-J2 = 1000; %100
-
-% Run decomposition
-my_tic = tic;
-cores = tr_als_es(X, TR_rank, J1, J2*ones(1,N), ...
-    'maxiters', maxiters, ...
-    'tol', 0, ...
-    'verbose', true, ...
-    'init', cores_init);
-toc_tr_als_es = toc(my_tic);
-
-% Compute error
-Y = cores_2_tensor(cores);
-er_tr_als_es = norm(vec(X-Y))/normX;
-
-% Print results
-fprintf('TR-ALS-ES\n')
-fprintf('\tTime: %.4f s\n', toc_tr_als_es)
-fprintf('\tError: %.4e\n\n', er_tr_als_es)
 
 
 %% Test of TR-ALS
