@@ -12,6 +12,13 @@ function A = cp_arls_lev(X, R, J, varargin)
 %A = cp_arls_lev(___, 'maxiters', maxiters) can be used to control the
 %maximum number of iterations. maxiters is 50 by default.
 %
+%A = cp_arls_lev(___, 'A_init', A_init) can be used to set how the factor
+%matrices are initialized. If A_init is "rand", then all the factor
+%matrices are initialized to have entries drawn uniformly at random from
+%[0,1]. If A_init is "RRF", then the factor matrices are initalized via a
+%randomized range finder applied to the unfoldings of X. A_init can also be
+%a cell array containing initializations for the factor matrices.
+%
 %REFERENCES:
 %
 %   [LK20] B. W. Larsen, T. G. Kolda. "Practical Leverage-Based Sampling
@@ -20,8 +27,10 @@ function A = cp_arls_lev(X, R, J, varargin)
 % Handle optional inputs
 params = inputParser;
 addParameter(params, 'maxiters', 50, @(x) isscalar(x) & x > 0);
+addParameter(params, 'A_init', "rand")
 parse(params, varargin{:});
 maxiters = params.Results.maxiters;
+A_init = params.Results.A_init;
 
 sz = size(X);
 N = length(sz);
@@ -31,9 +40,18 @@ if isscalar(J)
 end
 
 % Initialize factor matrices
-A = cell(1,N);
-for j = 2:N
-    A{j} = rand(sz(j), R);
+if iscell(A_init)
+    A = A_init;
+else
+    A = cell(1,N);
+    for j = 2:N
+        if strcmp(A_init, "rand")
+        A{j} = rand(sz(j), R);
+        elseif strcmp(A_init, "RRF")
+            Xn = classical_mode_unfolding(X,j);
+            A{j} = Xn * randn(size(Xn,2), R);
+        end
+    end
 end
 
 % Initialize sampling probability
