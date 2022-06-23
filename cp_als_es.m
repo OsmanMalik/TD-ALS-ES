@@ -13,7 +13,7 @@ function A = cp_als_es(X, R, J1, J2, varargin)
 %permute the modes of the input tensor so that the largest mode comes
 %first. This can speed up the sampling, since all 1st indices can be drawn
 %together rather than one at a time. Set permute_for_speed to true to
-%enabler this. It is false by default.
+%enable this. It is false by default.
 %
 %A = cp_als_es(___, 'A_init', A_init) can be used to set how the factor
 %matrices are initialized. If A_init is "rand", then all the factor

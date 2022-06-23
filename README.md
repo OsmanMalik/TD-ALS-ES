@@ -1,9 +1,8 @@
-# More Efficient Sampling for Tensor Decomposition
+# More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees
 
 This repo contains code used in the experiments in the paper 
-> Osman Asif Malik. *More Efficient Sampling for Tensor Decomposition*. arXiv:2110.07631
+> Osman Asif Malik. *More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees*. To appear in the proceedings of the **International Conference on Machine Learning (ICML)**, PMLR 162, 2022. Preprint available on [arXiv](https://arxiv.org/abs/2110.07631).
 
-The paper is available for download on [arXiv](https://arxiv.org/abs/2110.07631).
 The perhaps somewhat cryptic repo name stands for "**T**ensor **D**ecomposition via **A**lternating **L**east **S**quares with **E**fficient **S**ampling."
 
 
@@ -30,7 +29,7 @@ I have done my best to include relevant references in the code and this README, 
 The functions `cp_als_es.m` and `tr_als_es.m` are implementations of the proposed methods for CP and tensor ring decomposition, respectively. 
 The recursive sketching and sampling procedures are implemented in `recursive_sketch_CP.m` and `draw_samples_CP.m` for the CP decomposition, and in `recursive_sketch_TR.m` and `draw_samples_TR.m` for the tensor ring decomposition.
 
-The experiments that appear in our paper were conducted using the following scripts:
+The experiments that appear in the paper were conducted using the following scripts:
 - `experiment_1.m` and `experiment_2.m`: 
 Were used to generate the results in Sections 5.1 (Tables 3 and 4) and Section D.3 (Tables 6 and 7) for the CP and tensor ring decompositions, respectively.
 Portions of these scripts were also used to create the plots in Section D.3 (Figures 2-5).
@@ -48,7 +47,7 @@ Used for the demonstration of improved complexity in Section 5.3 for the CP deco
 - `experiment_worst_case_TR.m`: 
 Used for the demonstration of improved complexity in Section D.5 for the tensor ring decomposition.
 
-Results from the following scripts were not reported in the paper, but were used to gain some initial insight into compare different approaces to leverage score estimation:
+Results from the following scripts were not reported in the paper, but were used to gain some initial insight into different approaces to leverage score estimation:
 - `test_1.m`:
 Compares for a CP decomposition least squares problem the exact leverage score sampling distribution, our estimated distribution, and the empirical distribution when sampling according to the estimated distribution using our sampling scheme.
 
@@ -60,7 +59,8 @@ Compares for a CP decomposition least squares problem the exact leverage score s
 This code requires [Tensor Toolbox](https://gitlab.com/tensors/tensor_toolbox) for Matlab. 
 It also requires some functionality from the repo [tr-als-sampled](https://github.com/OsmanMalik/tr-als-sampled). 
 Make sure that the functions in both are accessible before running the code in this repo.
-
+Some of the methods we compare our CP decomposition method against in Section 5.2 require [Tensorlab](https://www.tensorlab.net/).
+Tensorlab is not necessary to run the rest of the code however.
 
 ## Compiling MEX functions
 
