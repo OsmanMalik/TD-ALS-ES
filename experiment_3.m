@@ -28,9 +28,6 @@ for tr = 1:no_trials
             CPD = cp_als(tensor(X), CP_rank, 'tol', tol, 'maxiters', maxiters);
             factor_mats = CPD.U;
             lambda = CPD.lambda;
-        case "cp_als_basic"
-            factor_mats = cp_als_basic(X, CP_rank, 'maxiters', maxiters);
-            lambda = ones(CP_rank,1);
         case "cpd_als" % Tensorlab
             options.Algorithm = @cpd_als;
             options.MaxIter = maxiters;
