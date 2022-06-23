@@ -12,6 +12,13 @@ function A = cp_arls_lev(X, R, J, varargin)
 %A = cp_arls_lev(___, 'maxiters', maxiters) can be used to control the
 %maximum number of iterations. maxiters is 50 by default.
 %
+%A = cp_arls_lev(___, 'A_init', A_init) can be used to set how the factor
+%matrices are initialized. If A_init is "rand", then all the factor
+%matrices are initialized to have entries drawn uniformly at random from
+%[0,1]. If A_init is "RRF", then the factor matrices are initalized via a
+%randomized range finder applied to the unfoldings of X. A_init can also be
+%a cell array containing initializations for the factor matrices.
+%
 %REFERENCES:
 %
 %   [LK20] B. W. Larsen, T. G. Kolda. "Practical Leverage-Based Sampling
@@ -20,16 +27,31 @@ function A = cp_arls_lev(X, R, J, varargin)
 % Handle optional inputs
 params = inputParser;
 addParameter(params, 'maxiters', 50, @(x) isscalar(x) & x > 0);
+addParameter(params, 'A_init', "rand")
 parse(params, varargin{:});
 maxiters = params.Results.maxiters;
+A_init = params.Results.A_init;
 
 sz = size(X);
 N = length(sz);
 
+if isscalar(J)
+    J = repmat(J, N, 1);
+end
+
 % Initialize factor matrices
-A = cell(1,N);
-for j = 2:N
-    A{j} = randn(sz(j), R);
+if iscell(A_init)
+    A = A_init;
+else
+    A = cell(1,N);
+    for j = 2:N
+        if strcmp(A_init, "rand")
+        A{j} = rand(sz(j), R);
+        elseif strcmp(A_init, "RRF")
+            Xn = classical_mode_unfolding(X,j);
+            A{j} = Xn * randn(size(Xn,2), R);
+        end
+    end
 end
 
 % Initialize sampling probability
@@ -46,10 +68,10 @@ for it = 1:maxiters
     for n = 1:N
         
         % Draw samples
-        samples = nan(J, N);
+        samples = nan(J(n), N);
         for j = 1:N
             if j ~= n
-                samples(:, j) = randsample(sz(j), J, true, sampling_probs{j});
+                samples(:, j) = randsample(sz(j), J(n), true, sampling_probs{j});
             end
         end
 
@@ -62,7 +84,7 @@ for it = 1:maxiters
         end
         
         % Compute rescaling factors
-        rescale = sqrt(occurs./J);
+        rescale = sqrt(occurs./J(n));
         for j = 1:N
             if j ~= n
                 rescale = rescale ./ sqrt(sampling_probs{j}(unq_samples(:,j)));
@@ -78,9 +100,27 @@ for it = 1:maxiters
         end
         
         % Construct sketched right hand side
+        
+        % Note: Out of 2 options below, second option is MUCH faster (about
+        % 30-40x in one test).
+
+        % Option 1: Unfold matrix, compute columns to sample, then
+        % transpose
+        %{
         lin_samples = to_linear_idx_CP(unq_samples, n, sz);
         Xn = classical_mode_unfolding(X, n);
         SXnT = Xn(:, lin_samples).';
+        %}
+
+        % Option 2: Compute linear indices, sample directly from tensor,
+        % then reshape to sketched matrix
+        szp = cumprod([1 sz(1:end-1)]);
+        samples_temp = unq_samples - 1; samples_temp(:,n) = 0;
+        llin = 1+samples_temp*szp';
+        llin = repelem(llin, sz(n), 1) + repmat((0:sz(n)-1)'*szp(n), size(unq_samples,1), 1);
+        SXnT = X(llin);
+        SXnT = reshape(SXnT, sz(n), size(unq_samples,1))';
+
         SXnT = SXnT .* rescale;
         
         % Solve sketched LS problem and update nth factor matrix

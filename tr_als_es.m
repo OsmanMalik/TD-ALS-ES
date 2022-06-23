@@ -1,5 +1,5 @@
 function [cores, varargout] = tr_als_es(X, ranks, J1, embedding_dims, varargin)
-%tr_als_sampled Compute tensor ring decomposition via efficiently sampled ALS
+%tr_als_es Compute tensor ring decomposition via efficiently sampled ALS
 %
 %WARNING: This function is an adaption of the tr_als_sampled.m function in
 %the repo https://github.com/OsmanMalik/tr-als-sampled. I have not tested
@@ -10,52 +10,58 @@ function [cores, varargout] = tr_als_es(X, ranks, J1, embedding_dims, varargin)
 %For loading from file: It is assumed that the tensor is stored in a
 %variable Y in the mat file.
 %
-%cores = tr_als(X, ranks, embedding_dims) computes a tensor ring (TR) 
+%cores = tr_als_es(X, ranks, embedding_dims) computes a tensor ring (TR) 
 %decomposition of the input N-dimensional array X by sampling the LS
 %problems using sketch sizes for each dimension given in embedding_dims.
 %Ranks is a length-N vector containing the target ranks. The output cores
 %is a cell containing the N cores tensors, each represented as a 3-way
 %array.
 %
-%cores = tr_als(___, 'conv_crit', conv_crit) is an optional parameter used
-%to control which convergence criterion is used. Set to either 'relative
-%error' or 'norm' to terminate when change in relative error or norm of
-%TR-tensor is below the tolerance in tol. Default is that no convergence
-%criterion is used.
+%cores = tr_als_es(___, 'conv_crit', conv_crit) is an optional parameter
+%used to control which convergence criterion is used. Set to either
+%'relative error' or 'norm' to terminate when change in relative error or
+%norm of TR-tensor is below the tolerance in tol. Default is that no
+%convergence criterion is used.
 %
-%cores = tr_als(___, 'tol', tol) is an optional argument that controls the
-%termination tolerance. If the change in the relative error is less than
-%tol at the conclusion of a main loop iteration, the algorithm terminates.
-%Default is 1e-3.
+%cores = tr_als_es(___, 'tol', tol) is an optional argument that controls
+%the termination tolerance. If the change in the relative error is less
+%than tol at the conclusion of a main loop iteration, the algorithm
+%terminates. Default is 1e-3.
 %
-%cores = tr_als(___, 'maxiters', maxiters) is an optional argument that
+%cores = tr_als_es(___, 'maxiters', maxiters) is an optional argument that
 %controls the maximum number of main loop iterations. The default is 50.
 %
-%cores = tr_als(___, 'verbose', verbose) is an optional argument that
+%cores = tr_als_es(___, 'verbose', verbose) is an optional argument that
 %controls the amount of information printed to the terminal during
 %execution. Setting verbose to true will result in more print out. Default
 %is false.
 %
-%cores = tr_als(___, 'no_mat_inc', no_mat_inc) is used to control how
+%cores = tr_als_es(___, 'no_mat_inc', no_mat_inc) is used to control how
 %input tensors read from file are sliced up to save RAM. We never use this
 %in our experiments, and I may eventually remove this functionality.
 %
-%cores = tr_als(___, 'breakup', breakup) is an optional length-N vector
+%cores = tr_als_es(___, 'breakup', breakup) is an optional length-N vector
 %input that can be used to break up the LS problems with multiple right
 %hand sides that come up into pieces so that not all problems are solved at
 %the same time. This is useful when a tensor dimension is particularly
 %large.
 %
-%cores = tr_als(___, 'alpha', alpha) alpha is an optional parameter which
-%controls how much Tikhonov regularization is added in LS problems. We
-%found that this helped avoid ill-conditioning on certain datasets.
+%cores = tr_als_es(___, 'alpha', alpha) alpha is an optional parameter
+%which controls how much Tikhonov regularization is added in LS problems.
+%We found that this helped avoid ill-conditioning on certain datasets.
 %
-%cores = tr_als(___, 'permute_for_speed', permute_for_speed)
+%cores = tr_als_es(___, 'permute_for_speed', permute_for_speed)
 %permute_for_speed is an optional parameter which can be set to true in
 %order to permute the tensor modes so that the largest mode is the first
 %one. This can help speed up the sampling process since all the first-mode
 %indices can be drawn at the same time from the same distribution, thus
 %making it beneficial to do this for the mode with the largest dimension.
+%
+%cores = tr_als_es(___, 'init', init) can be used to set how the core
+%tensors are initialized. If init is "randn" (the default), then all
+%entries of the cores drawn independently from a standard normal
+%distribution. init can also be a cell array containing initializations for
+%the factor matrices.
 
 %% Handle inputs 
 
@@ -69,6 +75,7 @@ addParameter(params, 'no_mat_inc', false);
 addParameter(params, 'breakup', false);
 addParameter(params, 'alpha', 0);
 addParameter(params, 'permute_for_speed', false);
+addParameter(params, 'init', "randn")
 parse(params, varargin{:});
 
 conv_crit = params.Results.conv_crit;
@@ -79,6 +86,7 @@ no_mat_inc = params.Results.no_mat_inc;
 breakup = params.Results.breakup;
 alpha = params.Results.alpha;
 permute_for_speed = params.Results.permute_for_speed;
+init = params.Results.init;
 
 % Check if X is path to mat file on disk
 %   X_mat_flag is a flag that keeps track of if X is an array or path to
@@ -123,7 +131,13 @@ else
     sz = size(X);
     N = length(sz);
 end
-cores = initialize_cores(sz, ranks);
+
+% Appropriately initialize cores
+if iscell(init)
+    cores = init;    
+elseif strcmp(init, "randn")
+    cores = initialize_cores(sz, ranks);
+end
 
 core_samples = cell(1, N);
 if ~breakup(1)
@@ -148,6 +162,16 @@ if nargout > 1 && tol > 0 && (strcmp(conv_crit, 'relative error') || strcmp(conv
     conv_vec = zeros(1, maxiters);
 end
 
+% Precompute vectors with order in which to multiply cores.
+% For some reason, reinitializing the vector below ends up taking some
+% non-negligible amount of time if it's done inside the main loop below, so
+% predefining them here instead to avoid that.
+idx_order = cell(N,1);
+for n = 1:N
+    idx_order{n} = [n+1:N 1:n-1];
+end
+
+
 %% Main loop
 % Iterate until convergence, for a maximum of maxiters iterations
 
@@ -171,7 +195,7 @@ for it = 1:maxiters
         rescaling = ones(J2, 1) ./ (sqrt_p * sqrt(J2));
         
         % Construct sketched design matrix
-        idx = [n+1:N 1:n-1]; % Order in which to multiply cores
+        idx = idx_order{n}; % Order in which to multiply cores
         G_sketch = permute(core_samples{idx(1)}, [1 3 2]);
         for m = 2:N-1
             permuted_core = permute(core_samples{idx(m)}, [1 3 2]);

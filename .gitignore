@@ -6,6 +6,7 @@
 *.mexw64
 *.txt
 *.jpg
+*.zip
 
 # Folders
 old

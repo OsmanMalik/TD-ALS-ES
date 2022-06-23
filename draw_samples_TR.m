@@ -52,6 +52,15 @@ for j = 1:N
     end
 end
 
+% Precompute vectors with order in which to multiply cores.
+% For some reason, reinitializing the vector below ends up taking some
+% non-negligible amount of time if it's done inside the main loop below, so
+% predefining them here instead to avoid that.
+idx_order = cell(N,1);
+for m = 1:N
+    idx_order{m} = [m+1:N 1:m-1];
+end
+
 % Main loop for drawing all samples
 samples = nan(J2, N); % Each row is a realization (i_j)_{j \neq n}
 sqrt_probs = ones(J2, 1); % To store the square root of the probability of each drawn sample
@@ -61,6 +70,8 @@ else
     first_idx = 1;
 end
 first_idx_flag = true;
+
+
 for samp = 1:J2
     % Compute P(i_m | (i_j)_{j < m, ~= n}) for each m (~=n) and draw i_m
     for m = first_idx:N
@@ -71,28 +82,29 @@ for samp = 1:J2
         if m ~= n
             
             % Compute conditional probability vector
-            idx = [m+1:N 1:m-1];
+            idx = idx_order{m};
             if idx(1) >= m || idx(1) == n
                 M = C2{idx(1)};
             else
-                sz = size(C1{idx(1)});
+                sz = size(C1{idx(1)}, 1:3);
                 M = reshape(C1{idx(1)}(:, samples(samp,idx(1)), :), sz(1), sz(3));
             end
             for j = 2:length(idx)
                 if idx(j) >= m || idx(j) == n
                     M = M * C2{idx(j)};
                 else
-                    sz = size(C1{idx(j)});
+                    sz = size(C1{idx(j)}, 1:3);
                     M = M * reshape(C1{idx(j)}(:, samples(samp,idx(j)), :), sz(1), sz(3));
                 end
             end
             common_terms = M';
             
             common_terms_vec = common_terms(:);
-            const = C2_vec{m} * common_terms_vec;
-            common_terms_vec = common_terms_vec / const;
+            %const = C2_vec{m} * common_terms_vec;
+            %common_terms_vec = common_terms_vec / const;
             prob_m = C1_unf{m} * common_terms_vec;
-                       
+            prob_m = prob_m / sum(prob_m);      
+
             if first_idx_flag
                 % Draw from the vector
                 if min(prob_m)<0
