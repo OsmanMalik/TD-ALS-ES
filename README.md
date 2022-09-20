@@ -39,7 +39,7 @@ Repeats the experiment in `experiment_2.m` but for a setup corresponding to the 
 It was used to generate some of the results in Section D.6 (Table 8).
 
 - `experiment_3.m`: 
-Was used to create run the feature extraction experiment in Section 5.2 (Table 5) and Section D.6 (Table 9).
+Was used to run the feature extraction experiment in Section 5.2 (Table 5) and Section D.6 (Table 9).
 
 - `experiment_worst_case_CP.m`: 
 Used for the demonstration of improved complexity in Section 5.3 for the CP decomposition. 
