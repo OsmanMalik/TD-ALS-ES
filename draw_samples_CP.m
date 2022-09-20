@@ -16,7 +16,7 @@ N = length(A);
 temp = V*inv(Sigma);
 Phi = temp*temp';
 
-% Precompute the two terms in Eq (15) in paper
+% Precompute the two terms in Eq (28) in paper
 M1 = cell(1,N);
 M2 = cell(1,N);
 for j = 1:N
