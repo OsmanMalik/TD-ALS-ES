@@ -26,7 +26,8 @@ for j = 1:N
     end
 end
 
-% Also precompute the products in the second of those terms
+% Also precompute the products in the second of those terms.
+% Note that these products incorporate the Phi matrix as well.
 term_2 = cell(1,N);
 for m = 1:N
     term_2{m} = Phi(:);
@@ -60,9 +61,7 @@ m = first_idx;
 %end
 %common_terms = common_terms.';
 
-%common_terms = term_2{m}.';
-
-common_terms = (Phi(:) .* term_2{m}).';
+common_terms = term_2{m}.';
 
 %const = common_terms * M2{m}(:);
 %common_terms = common_terms / const;
