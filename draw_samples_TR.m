@@ -2,12 +2,13 @@ function [samples, sqrt_probs] = draw_samples_TR(G, sketch, n, J2)
 %draw_samples_TR Draws samples for TR design matrix as discussed in our
 %paper
 %
-%samples = draw_samples_TR(G, sketch, n, no_samp) returns no_samp samples
-%organized into an no_samp by N matrix, where N is the number of modes of
-%the tensor being decomposed. The cell G should contain all the TR core
-%tensors in standard order, and the n-th core is the one being solved for.
-%The n-th column of samples will just be NaN, since that index is not being
-%sampled.
+%[samples, sqrt_probs] = draw_samples_TR(G, sketch, n, no_samp) returns
+%no_samp samples organized into a no_samp by N matrix, where N is the
+%number of modes of the tensor being decomposed, and a vector sqrt_probs
+%which contains the square root of the probability of drawing each of the
+%sampled rows. The cell G should contain all the TR core tensors in
+%standard order, and the n-th core is the one being solved for. The n-th
+%column of samples will just be NaN, since that index is not being sampled.
 %
 %Note that this function requires some files from the tr-als-sampled
 %repo which is available at: https://github.com/OsmanMalik/tr-als-sampled
@@ -19,8 +20,8 @@ N = length(G);
 temp = V*inv(Sigma);
 Phi = temp*temp';
 
-% Precompute the two terms in Eq (23) in paper, but reshaped into tensors
-% according to the discussion in Remark 19 of the paper
+% Precompute the two terms in Eq (38) in paper, but reshaped into tensors
+% according to the discussion in Remark 20 of the paper
 C1 = cell(1,N);
 C1_unf = cell(1,N);
 C2 = cell(1,N);
@@ -61,7 +62,6 @@ for m = 1:N
     idx_order{m} = [m+1:N 1:m-1];
 end
 
-% Main loop for drawing all samples
 samples = nan(J2, N); % Each row is a realization (i_j)_{j \neq n}
 sqrt_probs = ones(J2, 1); % To store the square root of the probability of each drawn sample
 if n == 1
@@ -71,7 +71,7 @@ else
 end
 first_idx_flag = true;
 
-
+% Main loop for drawing all samples
 for samp = 1:J2
     % Compute P(i_m | (i_j)_{j < m, ~= n}) for each m (~=n) and draw i_m
     for m = first_idx:N

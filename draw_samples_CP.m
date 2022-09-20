@@ -2,12 +2,14 @@ function [samples, sqrt_probs] = draw_samples_CP(A, sketch, n, no_samp)
 %draw_samples_CP Draws samples for CP design matrix as discussed in our
 %paper
 %
-%samples = draw_samples_CP(A, sketch, n, no_samp) returns no_samp samples
-%organized into an no_samp by N matrix, where N is the number of modes of
-%the tensor being decomposed. The cell A should contain all the CP factor
-%matrices in standard order, and the n-th factor matrix is the one being
-%solved for. The n-th column of samples will just be NaN, since that index
-%is not being sampled. 
+%[samples, sqrt_probs] = draw_samples_CP(A, sketch, n, no_samp) returns
+%no_samp samples organized into an no_samp by N matrix, where N is the
+%number of modes of the tensor being decomposed, and a vector sqrt_probs
+%which contains the square root of the probability of drawing each of the
+%sampled rows. The cell A should contain all the CP factor matrices in
+%standard order, and the n-th factor matrix is the one being solved for.
+%The n-th column of samples will just be NaN, since that index is not being
+%sampled.
 
 N = length(A);
 
