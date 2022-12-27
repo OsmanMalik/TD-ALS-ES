@@ -1,7 +1,9 @@
 # More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees
 
 This repo contains code used in the experiments in the paper 
-> Osman Asif Malik. *More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees*. To appear in the proceedings of the **International Conference on Machine Learning (ICML)**, PMLR 162, 2022. Preprint available on [arXiv](https://arxiv.org/abs/2110.07631).
+> Osman Asif Malik. *More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees*. **International Conference on Machine Learning (ICML)**, PMLR 162, pp. 14887-14917, 2022. 
+
+The paper is available at https://proceedings.mlr.press/v162/malik22a.html. 
 
 The perhaps somewhat cryptic repo name stands for "**T**ensor **D**ecomposition via **A**lternating **L**east **S**quares with **E**fficient **S**ampling."
 
@@ -11,13 +13,16 @@ The perhaps somewhat cryptic repo name stands for "**T**ensor **D**ecomposition 
 If you use this code in any of your own work, please reference our paper:
 
 ```
-@misc{malik2021efficient,
-      title={More Efficient Sampling for Tensor Decomposition}, 
-      author={Osman Asif Malik},
-      year={2021},
-      eprint={2110.07631},
-      archivePrefix={arXiv},
-      primaryClass={math.NA}
+@InProceedings{pmlr-v162-malik22a,
+  title = 	 {More Efficient Sampling for Tensor Decomposition With Worst-Case Guarantees},
+  author =       {Malik, Osman Asif},
+  booktitle = 	 {Proceedings of the 39th International Conference on Machine Learning},
+  pages = 	 {14887--14917},
+  year = 	 {2022},
+  volume = 	 {162},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {17--23 Jul},
+  publisher =    {PMLR},
 }
 ```
 
